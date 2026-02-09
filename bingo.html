@@ -1,0 +1,1094 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bingo Card Generator</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.prod.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #f5f5f5;
+        padding: 20px;
+      }
+
+      #app {
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      .header {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .header h1 {
+        color: #333;
+        margin-bottom: 10px;
+      }
+
+      .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s;
+      }
+
+      .btn-primary {
+        background: #007bff;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #0056b3;
+      }
+
+      .btn-danger {
+        background: #dc3545;
+        color: white;
+      }
+
+      .btn-danger:hover {
+        background: #c82333;
+      }
+
+      .btn-secondary {
+        background: #6c757d;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: #545b62;
+      }
+
+      .btn-success {
+        background: #28a745;
+        color: white;
+      }
+
+      .btn-success:hover {
+        background: #218838;
+      }
+
+      .list-view {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .list-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+
+      .list-table th,
+      .list-table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+      }
+
+      .list-table th {
+        background: #f8f9fa;
+        font-weight: 600;
+      }
+
+      .list-table tr:hover {
+        background: #f8f9fa;
+        cursor: pointer;
+      }
+
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+
+      .modal {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        max-width: 600px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+
+      .modal-large {
+        max-width: 800px;
+      }
+
+      .modal h2 {
+        margin-bottom: 20px;
+        color: #333;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+        color: #555;
+      }
+
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+
+      .color-input-group {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .color-input-group input[type='color'] {
+        width: 60px;
+        height: 40px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      .color-input-group input[type='text'] {
+        flex: 1;
+      }
+
+      .modal-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 20px;
+      }
+
+      .detail-view {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .detail-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #eee;
+      }
+
+      .detail-title {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .detail-title h2 {
+        color: #333;
+      }
+
+      .tables-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+        gap: 30px;
+        margin-top: 20px;
+      }
+
+      .bingo-table-wrapper {
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        padding: 15px;
+        background: white;
+      }
+
+      .table-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+
+      .bingo-table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 3px solid #333;
+      }
+
+      .bingo-table td {
+        width: 20%;
+        padding: 0;
+        border: 2px solid #333;
+        position: relative;
+        aspect-ratio: 1;
+        text-align: center;
+      }
+
+      .cell-content {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #333;
+        cursor: pointer;
+      }
+
+      .cell-content:hover {
+        opacity: 0.8;
+      }
+
+      .cell-icon {
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        font-size: 1rem;
+        color: #007bff;
+      }
+
+      .add-icon-btn {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 50%;
+        width: 25px;
+        height: 25px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-size: 12px;
+      }
+
+      .cell-content:hover .add-icon-btn {
+        opacity: 1;
+      }
+
+      .add-icon-btn:hover {
+        background: #007bff;
+        color: white;
+      }
+
+      .icon-picker {
+        padding: 20px;
+      }
+
+      .icon-search {
+        margin-bottom: 20px;
+      }
+
+      .icon-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+        gap: 10px;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      .icon-item {
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #ddd;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 24px;
+        transition: all 0.3s;
+      }
+
+      .icon-item:hover {
+        background: #007bff;
+        color: white;
+        border-color: #007bff;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #999;
+      }
+
+      .empty-state i {
+        font-size: 64px;
+        margin-bottom: 20px;
+      }
+
+      .back-btn {
+        margin-bottom: 20px;
+      }
+
+      /* Print Styles */
+      @media print {
+        body {
+          background: white;
+          padding: 0;
+          margin: 0;
+        }
+
+        .no-print {
+          display: none !important;
+        }
+
+        .print-container {
+          page-break-after: always;
+        }
+
+        .print-table {
+          width: 140mm;
+          height: 140mm;
+          page-break-inside: avoid;
+          margin: 0;
+          padding: 2mm;
+        }
+
+        .print-table .bingo-table {
+          width: 100%;
+          height: 100%;
+        }
+
+        .print-table .bingo-table td {
+          border: 2px solid #333;
+        }
+
+        .add-icon-btn {
+          display: none !important;
+        }
+
+        @page {
+          size: A4;
+          margin: 7mm;
+        }
+      }
+
+      .inline-edit {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .inline-edit input {
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div class="header no-print">
+        <h1>🎯 Bingo Card Generator</h1>
+      </div>
+
+      <!-- List View -->
+      <div v-if="currentView === 'list'" class="list-view no-print">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+          "
+        >
+          <h2>Generations</h2>
+          <button class="btn btn-primary" @click="openGenerateModal">
+            <i class="fas fa-plus"></i> Generate
+          </button>
+        </div>
+
+        <div v-if="generations.length === 0" class="empty-state">
+          <i class="fas fa-inbox"></i>
+          <p>
+            No generations yet. Click "Generate" to create your first bingo
+            cards!
+          </p>
+        </div>
+
+        <table v-else class="list-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Number of Tables</th>
+              <th>Created At</th>
+              <th style="width: 100px">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="gen in sortedGenerations"
+              :key="gen.id"
+              @click="viewGeneration(gen.id)"
+            >
+              <td>{{ gen.title }}</td>
+              <td>{{ gen.tables.length }}</td>
+              <td>{{ formatDate(gen.createdAt) }}</td>
+              <td @click.stop>
+                <button
+                  class="btn btn-danger"
+                  @click="deleteGeneration(gen.id)"
+                >
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Detail View -->
+      <div v-if="currentView === 'detail'" class="detail-view">
+        <button class="btn btn-secondary back-btn no-print" @click="backToList">
+          <i class="fas fa-arrow-left"></i> Back to List
+        </button>
+
+        <div class="detail-header no-print">
+          <div class="detail-title">
+            <h2 v-if="!editingTitle">{{ currentGeneration.title }}</h2>
+            <div v-else class="inline-edit">
+              <input
+                v-model="editTitleValue"
+                @keyup.enter="saveTitle"
+                @keyup.esc="cancelEditTitle"
+              />
+              <button class="btn btn-success" @click="saveTitle">
+                <i class="fas fa-check"></i>
+              </button>
+              <button class="btn btn-secondary" @click="cancelEditTitle">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <button
+              v-if="!editingTitle"
+              class="btn btn-secondary"
+              @click="startEditTitle"
+            >
+              <i class="fas fa-edit"></i> Edit
+            </button>
+          </div>
+          <button class="btn btn-primary" @click="openPrintView">
+            <i class="fas fa-print"></i> Print All
+          </button>
+        </div>
+
+        <div class="tables-grid">
+          <div
+            v-for="(table, index) in currentGeneration.tables"
+            :key="table.id"
+            class="bingo-table-wrapper"
+          >
+            <div class="table-header no-print">
+              <strong>Card #{{ index + 1 }}</strong>
+              <button
+                class="btn btn-secondary"
+                @click="openEditColorsModal(table)"
+              >
+                <i class="fas fa-palette"></i> Edit Colors
+              </button>
+            </div>
+            <table class="bingo-table">
+              <tbody>
+                <tr v-for="(row, rowIndex) in table.cells" :key="rowIndex">
+                  <td
+                    v-for="(cell, colIndex) in row"
+                    :key="colIndex"
+                    :style="{ backgroundColor: getCellColor(table, rowIndex, colIndex) }"
+                  >
+                    <div
+                      class="cell-content"
+                      @click="openIconPicker(table.id, rowIndex, colIndex)"
+                    >
+                      <span v-if="cell.number !== null">{{ cell.number }}</span>
+                      <span v-if="cell.icon" class="cell-icon">
+                        <i :class="cell.icon"></i>
+                      </span>
+                      <button class="add-icon-btn no-print">
+                        <i class="fas fa-plus"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Print View -->
+      <div v-if="currentView === 'print'" class="print-view">
+        <div
+          class="no-print"
+          style="padding: 20px; background: white; margin-bottom: 20px"
+        >
+          <button class="btn btn-secondary" @click="closePrintView">
+            <i class="fas fa-arrow-left"></i> Back
+          </button>
+          <button
+            class="btn btn-primary"
+            @click="print"
+            style="margin-left: 10px"
+          >
+            <i class="fas fa-print"></i> Print
+          </button>
+        </div>
+
+        <div
+          v-for="(pair, pairIndex) in tablePairs"
+          :key="pairIndex"
+          class="print-container"
+        >
+          <div v-for="table in pair" :key="table.id" class="print-table">
+            <table class="bingo-table">
+              <tbody>
+                <tr v-for="(row, rowIndex) in table.cells" :key="rowIndex">
+                  <td
+                    v-for="(cell, colIndex) in row"
+                    :key="colIndex"
+                    :style="{ backgroundColor: getCellColor(table, rowIndex, colIndex) }"
+                  >
+                    <div class="cell-content">
+                      <span v-if="cell.number !== null">{{ cell.number }}</span>
+                      <span v-if="cell.icon" class="cell-icon">
+                        <i :class="cell.icon"></i>
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Generate Modal -->
+      <div
+        v-if="showGenerateModal"
+        class="modal-overlay"
+        @click.self="closeGenerateModal"
+      >
+        <div class="modal">
+          <h2>Generate Bingo Cards</h2>
+          <div class="form-group">
+            <label>Title</label>
+            <input v-model="generateForm.title" placeholder="Enter title" />
+          </div>
+          <div class="form-group">
+            <label>Number of Tables</label>
+            <input
+              v-model.number="generateForm.numberOfTables"
+              type="number"
+              min="1"
+              placeholder="Enter number of tables"
+            />
+          </div>
+          <div class="form-group">
+            <label>Cell Colors (Checkerboard Pattern)</label>
+            <div class="color-input-group">
+              <input type="color" v-model="generateForm.color1" />
+              <input
+                type="text"
+                v-model="generateForm.color1"
+                placeholder="#ffffff"
+              />
+              <span>Color 1</span>
+            </div>
+            <div class="color-input-group">
+              <input type="color" v-model="generateForm.color2" />
+              <input
+                type="text"
+                v-model="generateForm.color2"
+                placeholder="#cccccc"
+              />
+              <span>Color 2</span>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button class="btn btn-secondary" @click="closeGenerateModal">
+              Cancel
+            </button>
+            <button class="btn btn-primary" @click="generateCards">
+              Generate
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Edit Colors Modal -->
+      <div
+        v-if="showEditColorsModal"
+        class="modal-overlay"
+        @click.self="closeEditColorsModal"
+      >
+        <div class="modal">
+          <h2>Edit Card Colors</h2>
+          <div class="form-group">
+            <label>Cell Colors (Checkerboard Pattern)</label>
+            <div class="color-input-group">
+              <input type="color" v-model="editColorsForm.color1" />
+              <input
+                type="text"
+                v-model="editColorsForm.color1"
+                placeholder="#ffffff"
+              />
+              <span>Color 1</span>
+            </div>
+            <div class="color-input-group">
+              <input type="color" v-model="editColorsForm.color2" />
+              <input
+                type="text"
+                v-model="editColorsForm.color2"
+                placeholder="#cccccc"
+              />
+              <span>Color 2</span>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button class="btn btn-secondary" @click="closeEditColorsModal">
+              Cancel
+            </button>
+            <button class="btn btn-primary" @click="saveTableColors">
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Icon Picker Modal -->
+      <div
+        v-if="showIconPicker"
+        class="modal-overlay"
+        @click.self="closeIconPicker"
+      >
+        <div class="modal modal-large">
+          <h2>Select Icon</h2>
+          <div class="icon-picker">
+            <div class="form-group icon-search">
+              <input v-model="iconSearchQuery" placeholder="Search icons..." />
+            </div>
+            <div class="icon-grid">
+              <div
+                v-for="icon in filteredIcons"
+                :key="icon"
+                class="icon-item"
+                @click="selectIcon(icon)"
+                :title="icon"
+              >
+                <i :class="icon"></i>
+              </div>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button class="btn btn-secondary" @click="closeIconPicker">
+              Cancel
+            </button>
+            <button class="btn btn-danger" @click="removeIcon">
+              Remove Icon
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const { createApp } = Vue;
+
+      createApp({
+        data() {
+          return {
+            generations: [],
+            currentView: 'list',
+            currentGenerationId: null,
+            showGenerateModal: false,
+            showEditColorsModal: false,
+            showIconPicker: false,
+            editingTitle: false,
+            editTitleValue: '',
+            generateForm: {
+              title: '',
+              numberOfTables: 1,
+              color1: '#ffffff',
+              color2: '#e3f2fd',
+            },
+            editColorsForm: {
+              tableId: null,
+              color1: '',
+              color2: '',
+            },
+            iconPicker: {
+              tableId: null,
+              rowIndex: null,
+              colIndex: null,
+            },
+            iconSearchQuery: '',
+            popularIcons: [
+              'fas fa-star',
+              'fas fa-heart',
+              'fas fa-flag',
+              'fas fa-bell',
+              'fas fa-check',
+              'fas fa-times',
+              'fas fa-plus',
+              'fas fa-minus',
+              'fas fa-circle',
+              'fas fa-square',
+              'fas fa-diamond',
+              'fas fa-crown',
+              'fas fa-fire',
+              'fas fa-bolt',
+              'fas fa-moon',
+              'fas fa-sun',
+              'fas fa-cloud',
+              'fas fa-snowflake',
+              'fas fa-tree',
+              'fas fa-leaf',
+              'fas fa-apple',
+              'fas fa-lemon',
+              'fas fa-car',
+              'fas fa-plane',
+              'fas fa-rocket',
+              'fas fa-bicycle',
+              'fas fa-train',
+              'fas fa-ship',
+              'fas fa-home',
+              'fas fa-building',
+              'fas fa-store',
+              'fas fa-hospital',
+              'fas fa-school',
+              'fas fa-church',
+              'fas fa-pizza-slice',
+              'fas fa-coffee',
+              'fas fa-mug-hot',
+              'fas fa-cake',
+              'fas fa-birthday-cake',
+              'fas fa-gift',
+              'fas fa-music',
+              'fas fa-guitar',
+              'fas fa-drum',
+              'fas fa-microphone',
+              'fas fa-camera',
+              'fas fa-video',
+              'fas fa-film',
+              'fas fa-tv',
+              'fas fa-gamepad',
+              'fas fa-trophy',
+              'fas fa-medal',
+              'fas fa-award',
+              'fas fa-futbol',
+              'fas fa-basketball',
+              'fas fa-football',
+              'fas fa-baseball',
+              'fas fa-volleyball',
+              'fas fa-hockey-puck',
+              'fas fa-bowling-ball',
+              'fas fa-table-tennis',
+              'fas fa-dumbbell',
+              'fas fa-running',
+              'fas fa-swimming-pool',
+              'fas fa-skiing',
+              'fas fa-book',
+              'fas fa-bookmark',
+              'fas fa-pen',
+              'fas fa-pencil',
+              'fas fa-paint-brush',
+              'fas fa-palette',
+              'fas fa-glasses',
+              'fas fa-hat-wizard',
+              'fas fa-umbrella',
+              'fas fa-key',
+              'fas fa-lock',
+              'fas fa-unlock',
+              'fas fa-shield',
+              'fas fa-user',
+              'fas fa-users',
+              'fas fa-user-tie',
+              'fas fa-smile',
+              'fas fa-laugh',
+              'fas fa-grin',
+              'fas fa-angry',
+              'fas fa-sad-tear',
+              'fas fa-surprise',
+              'fas fa-dog',
+              'fas fa-cat',
+              'fas fa-horse',
+              'fas fa-fish',
+              'fas fa-crow',
+              'fas fa-dove',
+              'fas fa-dragon',
+              'fas fa-frog',
+              'fas fa-spider',
+              'fas fa-bug',
+            ],
+          };
+        },
+        computed: {
+          sortedGenerations() {
+            return [...this.generations].sort(
+              (a, b) => b.createdAt - a.createdAt,
+            );
+          },
+          currentGeneration() {
+            return this.generations.find(
+              (g) => g.id === this.currentGenerationId,
+            );
+          },
+          tablePairs() {
+            if (!this.currentGeneration) return [];
+            const pairs = [];
+            const tables = this.currentGeneration.tables;
+            for (let i = 0; i < tables.length; i += 2) {
+              pairs.push([tables[i], tables[i + 1]].filter(Boolean));
+            }
+            return pairs;
+          },
+          filteredIcons() {
+            if (!this.iconSearchQuery) {
+              return this.popularIcons;
+            }
+            const query = this.iconSearchQuery.toLowerCase();
+            return this.popularIcons.filter((icon) =>
+              icon.toLowerCase().includes(query),
+            );
+          },
+        },
+        mounted() {
+          this.loadData();
+        },
+        methods: {
+          loadData() {
+            const data = localStorage.getItem('bingoGenerations');
+            if (data) {
+              this.generations = JSON.parse(data);
+            }
+          },
+          saveData() {
+            localStorage.setItem(
+              'bingoGenerations',
+              JSON.stringify(this.generations),
+            );
+          },
+          formatDate(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleString();
+          },
+          openGenerateModal() {
+            this.generateForm = {
+              title: '',
+              numberOfTables: 1,
+              color1: '#ffffff',
+              color2: '#e3f2fd',
+            };
+            this.showGenerateModal = true;
+          },
+          closeGenerateModal() {
+            this.showGenerateModal = false;
+          },
+          generateRandomNumbers(min, max, count) {
+            const numbers = [];
+            while (numbers.length < count) {
+              const num = Math.floor(Math.random() * (max - min + 1)) + min;
+              if (!numbers.includes(num)) {
+                numbers.push(num);
+              }
+            }
+            return numbers.sort((a, b) => a - b);
+          },
+          generateBingoTable(colors) {
+            const cells = [];
+            const columns = [
+              this.generateRandomNumbers(1, 15, 5),
+              this.generateRandomNumbers(16, 30, 5),
+              this.generateRandomNumbers(31, 45, 5),
+              this.generateRandomNumbers(46, 60, 5),
+              this.generateRandomNumbers(61, 75, 5),
+            ];
+
+            for (let row = 0; row < 5; row++) {
+              const rowCells = [];
+              for (let col = 0; col < 5; col++) {
+                // Middle cell (row 2, col 2) is blank
+                const number =
+                  row === 2 && col === 2 ? null : columns[col][row];
+                rowCells.push({
+                  number: number,
+                  icon: null,
+                });
+              }
+              cells.push(rowCells);
+            }
+
+            return {
+              id: Date.now() + Math.random(),
+              colors: { ...colors },
+              cells: cells,
+            };
+          },
+          generateCards() {
+            if (
+              !this.generateForm.title ||
+              this.generateForm.numberOfTables < 1
+            ) {
+              alert('Please fill in all fields');
+              return;
+            }
+
+            const colors = {
+              color1: this.generateForm.color1,
+              color2: this.generateForm.color2,
+            };
+
+            const tables = [];
+            for (let i = 0; i < this.generateForm.numberOfTables; i++) {
+              tables.push(this.generateBingoTable(colors));
+            }
+
+            const generation = {
+              id: Date.now(),
+              title: this.generateForm.title,
+              createdAt: Date.now(),
+              tables: tables,
+            };
+
+            this.generations.push(generation);
+            this.saveData();
+            this.closeGenerateModal();
+          },
+          deleteGeneration(id) {
+            if (confirm('Are you sure you want to delete this generation?')) {
+              this.generations = this.generations.filter((g) => g.id !== id);
+              this.saveData();
+            }
+          },
+          viewGeneration(id) {
+            this.currentGenerationId = id;
+            this.currentView = 'detail';
+          },
+          backToList() {
+            this.currentView = 'list';
+            this.currentGenerationId = null;
+          },
+          startEditTitle() {
+            this.editTitleValue = this.currentGeneration.title;
+            this.editingTitle = true;
+          },
+          saveTitle() {
+            if (this.editTitleValue.trim()) {
+              this.currentGeneration.title = this.editTitleValue.trim();
+              this.saveData();
+            }
+            this.editingTitle = false;
+          },
+          cancelEditTitle() {
+            this.editingTitle = false;
+          },
+          openEditColorsModal(table) {
+            this.editColorsForm = {
+              tableId: table.id,
+              color1: table.colors.color1,
+              color2: table.colors.color2,
+            };
+            this.showEditColorsModal = true;
+          },
+          closeEditColorsModal() {
+            this.showEditColorsModal = false;
+          },
+          saveTableColors() {
+            const table = this.currentGeneration.tables.find(
+              (t) => t.id === this.editColorsForm.tableId,
+            );
+            if (table) {
+              table.colors.color1 = this.editColorsForm.color1;
+              table.colors.color2 = this.editColorsForm.color2;
+              this.saveData();
+            }
+            this.closeEditColorsModal();
+          },
+          getCellColor(table, rowIndex, colIndex) {
+            // Checkerboard pattern
+            return (rowIndex + colIndex) % 2 === 0
+              ? table.colors.color1
+              : table.colors.color2;
+          },
+          openIconPicker(tableId, rowIndex, colIndex) {
+            this.iconPicker = { tableId, rowIndex, colIndex };
+            this.iconSearchQuery = '';
+            this.showIconPicker = true;
+          },
+          closeIconPicker() {
+            this.showIconPicker = false;
+          },
+          selectIcon(icon) {
+            const table = this.currentGeneration.tables.find(
+              (t) => t.id === this.iconPicker.tableId,
+            );
+            if (table) {
+              table.cells[this.iconPicker.rowIndex][
+                this.iconPicker.colIndex
+              ].icon = icon;
+              this.saveData();
+            }
+            this.closeIconPicker();
+          },
+          removeIcon() {
+            const table = this.currentGeneration.tables.find(
+              (t) => t.id === this.iconPicker.tableId,
+            );
+            if (table) {
+              table.cells[this.iconPicker.rowIndex][
+                this.iconPicker.colIndex
+              ].icon = null;
+              this.saveData();
+            }
+            this.closeIconPicker();
+          },
+          openPrintView() {
+            this.currentView = 'print';
+          },
+          closePrintView() {
+            this.currentView = 'detail';
+          },
+          print() {
+            window.print();
+          },
+        },
+      }).mount('#app');
+    </script>
+  </body>
+</html>
