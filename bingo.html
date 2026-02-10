@@ -262,9 +262,8 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 2.5rem;
+        font-size: 3.5rem;
         font-weight: bold;
-        color: #333;
         cursor: pointer;
       }
 
@@ -277,7 +276,6 @@
         bottom: 5px;
         right: 5px;
         font-size: 1rem;
-        color: #007bff;
       }
 
       .add-icon-btn {
@@ -293,18 +291,15 @@
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        opacity: 0;
-        transition: opacity 0.3s;
-        font-size: 12px;
-      }
-
-      .cell-content:hover .add-icon-btn {
         opacity: 1;
+        transition: all 0.3s;
+        font-size: 12px;
       }
 
       .add-icon-btn:hover {
         background: #007bff;
         color: white;
+        transform: scale(1.1);
       }
 
       .icon-picker {
@@ -534,10 +529,11 @@
                   >
                     <div
                       class="cell-content"
+                      :style="{ color: table.colors.textColor || '#333' }"
                       @click="openIconPicker(table.id, rowIndex, colIndex)"
                     >
                       <span v-if="cell.number !== null">{{ cell.number }}</span>
-                      <span v-if="cell.icon" class="cell-icon">
+                      <span v-if="cell.icon" class="cell-icon" :style="{ color: table.colors.iconColor || '#007bff' }">
                         <i :class="cell.icon"></i>
                       </span>
                       <button class="add-icon-btn no-print">
@@ -584,9 +580,9 @@
                     :key="colIndex"
                     :style="{ backgroundColor: getCellColor(table, rowIndex, colIndex) }"
                   >
-                    <div class="cell-content">
+                    <div class="cell-content" :style="{ color: table.colors.textColor || '#333' }">
                       <span v-if="cell.number !== null">{{ cell.number }}</span>
-                      <span v-if="cell.icon" class="cell-icon">
+                      <span v-if="cell.icon" class="cell-icon" :style="{ color: table.colors.iconColor || '#007bff' }">
                         <i :class="cell.icon"></i>
                       </span>
                     </div>
@@ -628,7 +624,7 @@
                 v-model="generateForm.color1"
                 placeholder="#ffffff"
               />
-              <span>Color 1</span>
+              <span>Background Color 1</span>
             </div>
             <div class="color-input-group">
               <input type="color" v-model="generateForm.color2" />
@@ -637,7 +633,29 @@
                 v-model="generateForm.color2"
                 placeholder="#cccccc"
               />
-              <span>Color 2</span>
+              <span>Background Color 2</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Text Color</label>
+            <div class="color-input-group">
+              <input type="color" v-model="generateForm.textColor" />
+              <input
+                type="text"
+                v-model="generateForm.textColor"
+                placeholder="#333333"
+              />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Icon Color</label>
+            <div class="color-input-group">
+              <input type="color" v-model="generateForm.iconColor" />
+              <input
+                type="text"
+                v-model="generateForm.iconColor"
+                placeholder="#007bff"
+              />
             </div>
           </div>
           <div class="modal-actions">
@@ -668,7 +686,7 @@
                 v-model="editColorsForm.color1"
                 placeholder="#ffffff"
               />
-              <span>Color 1</span>
+              <span>Background Color 1</span>
             </div>
             <div class="color-input-group">
               <input type="color" v-model="editColorsForm.color2" />
@@ -677,7 +695,29 @@
                 v-model="editColorsForm.color2"
                 placeholder="#cccccc"
               />
-              <span>Color 2</span>
+              <span>Background Color 2</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Text Color</label>
+            <div class="color-input-group">
+              <input type="color" v-model="editColorsForm.textColor" />
+              <input
+                type="text"
+                v-model="editColorsForm.textColor"
+                placeholder="#333333"
+              />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Icon Color</label>
+            <div class="color-input-group">
+              <input type="color" v-model="editColorsForm.iconColor" />
+              <input
+                type="text"
+                v-model="editColorsForm.iconColor"
+                placeholder="#007bff"
+              />
             </div>
           </div>
           <div class="modal-actions">
@@ -746,11 +786,15 @@
               numberOfTables: 1,
               color1: '#ffffff',
               color2: '#e3f2fd',
+              textColor: '#333333',
+              iconColor: '#007bff',
             },
             editColorsForm: {
               tableId: null,
               color1: '',
               color2: '',
+              textColor: '',
+              iconColor: '',
             },
             iconPicker: {
               tableId: null,
@@ -914,6 +958,8 @@
               numberOfTables: 1,
               color1: '#ffffff',
               color2: '#e3f2fd',
+              textColor: '#333333',
+              iconColor: '#007bff',
             };
             this.showGenerateModal = true;
           },
@@ -972,6 +1018,8 @@
             const colors = {
               color1: this.generateForm.color1,
               color2: this.generateForm.color2,
+              textColor: this.generateForm.textColor,
+              iconColor: this.generateForm.iconColor,
             };
 
             const tables = [];
@@ -1023,6 +1071,8 @@
               tableId: table.id,
               color1: table.colors.color1,
               color2: table.colors.color2,
+              textColor: table.colors.textColor || '#333333',
+              iconColor: table.colors.iconColor || '#007bff',
             };
             this.showEditColorsModal = true;
           },
@@ -1036,6 +1086,8 @@
             if (table) {
               table.colors.color1 = this.editColorsForm.color1;
               table.colors.color2 = this.editColorsForm.color2;
+              table.colors.textColor = this.editColorsForm.textColor;
+              table.colors.iconColor = this.editColorsForm.iconColor;
               this.saveData();
             }
             this.closeEditColorsModal();
