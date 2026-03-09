@@ -212,6 +212,14 @@
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       }
 
+      .detail-header input {
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        box-sizing: border-box;
+      }
+
       .detail-header {
         display: flex;
         justify-content: space-between;
@@ -221,19 +229,9 @@
         border-bottom: 2px solid #eee;
       }
 
-      .detail-title {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-      }
-
-      .detail-title h2 {
-        color: #333;
-      }
-
       .tables-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+        grid-template-columns: repeat(2, 1fr);
         gap: 30px;
         margin-top: 20px;
       }
@@ -243,6 +241,7 @@
         border-radius: 8px;
         padding: 15px;
         background: white;
+        overflow: hidden;
       }
 
       .table-header {
@@ -256,6 +255,7 @@
         width: 100%;
         border-collapse: collapse;
         border: 3px solid #333;
+        table-layout: fixed;
       }
 
       .bingo-table td {
@@ -277,6 +277,7 @@
         font-size: 3.5rem;
         font-weight: bold;
         cursor: pointer;
+        overflow: hidden;
       }
 
       .cell-content:hover {
@@ -380,8 +381,6 @@
         }
 
         .print-table {
-          width: 140mm;
-          height: 140mm;
           page-break-inside: avoid;
           margin: 0;
           padding: 2mm;
@@ -404,19 +403,6 @@
           size: A4;
           margin: 7mm;
         }
-      }
-
-      .inline-edit {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-      }
-
-      .inline-edit input {
-        padding: 8px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 16px;
       }
     </style>
   </head>
@@ -487,31 +473,89 @@
           <i class="fas fa-arrow-left"></i> Back to List
         </button>
 
-        <div class="detail-header no-print">
-          <div class="detail-title">
-            <h2 v-if="!editingTitle">{{ currentGeneration.title }}</h2>
-            <div v-else class="inline-edit">
+        <div
+          class="detail-header no-print"
+          style="display: flex; align-items: flex-start; gap: 60px"
+        >
+          <div style="display: flex; flex-direction: column; gap: 8px; flex: 1">
+            <div style="display: flex; align-items: center; gap: 10px">
+              <label style="margin: 0; font-weight: bold; font-size: 0.9em"
+                >Title:</label
+              >
               <input
-                v-model="editTitleValue"
-                @keyup.enter="saveTitle"
-                @keyup.esc="cancelEditTitle"
+                v-model="currentGeneration.title"
+                @change="saveData()"
+                style="flex: 1"
               />
-              <button class="btn btn-success" @click="saveTitle">
-                <i class="fas fa-check"></i>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px">
+              <label style="margin: 0; font-weight: bold; font-size: 0.9em"
+                >Digit size:</label
+              >
+              <input
+                v-model.number="currentGeneration.digitSize"
+                type="number"
+                min="0.5"
+                max="10"
+                step="0.1"
+                style="width: 65px"
+                @change="saveData()"
+              />
+              <label style="margin: 0; font-weight: bold; font-size: 0.9em"
+                >Icon size:</label
+              >
+              <input
+                v-model.number="currentGeneration.iconSize"
+                type="number"
+                min="0.5"
+                max="5"
+                step="0.1"
+                style="width: 65px"
+                @change="saveData()"
+              />
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px">
+              <label style="margin: 0; font-weight: bold; font-size: 0.9em"
+                >Print size (mm):</label
+              >
+              <input
+                v-model.number="currentGeneration.printWidth"
+                type="number"
+                min="50"
+                max="300"
+                step="1"
+                style="width: 70px"
+                @change="saveData()"
+              />
+              <span>x</span>
+              <input
+                v-model.number="currentGeneration.printHeight"
+                type="number"
+                min="50"
+                max="300"
+                step="1"
+                style="width: 70px"
+                @change="saveData()"
+              />
+              <button
+                class="btn btn-secondary"
+                @click="currentGeneration.printWidth = 140; currentGeneration.printHeight = 140; saveData()"
+              >
+                A5
               </button>
-              <button class="btn btn-secondary" @click="cancelEditTitle">
-                <i class="fas fa-times"></i>
+              <button
+                class="btn btn-secondary"
+                @click="currentGeneration.printWidth = 200; currentGeneration.printHeight = 200; saveData()"
+              >
+                A4
               </button>
             </div>
-            <button
-              v-if="!editingTitle"
-              class="btn btn-secondary"
-              @click="startEditTitle"
-            >
-              <i class="fas fa-edit"></i> Edit
-            </button>
           </div>
-          <button class="btn btn-primary" @click="openPrintView">
+          <button
+            class="btn btn-primary"
+            @click="openPrintView"
+            style="flex-shrink: 0"
+          >
             <i class="fas fa-print"></i> Print All
           </button>
         </div>
@@ -541,14 +585,14 @@
                   >
                     <div
                       class="cell-content"
-                      :style="{ color: table.colors.textColor || '#333', fontSize: (table.colors.digitSize || 3.5) + 'rem' }"
+                      :style="{ color: table.colors.textColor || '#333', fontSize: (currentGeneration.digitSize || table.colors.digitSize || 3.5) + 'rem' }"
                       @click="openIconPicker(table.id, rowIndex, colIndex)"
                     >
                       <span v-if="cell.number !== null">{{ cell.number }}</span>
                       <span
                         v-if="cell.icon"
                         class="cell-icon"
-                        :style="{ color: table.colors.iconColor || '#007bff', fontSize: (table.colors.iconSize || 1) + 'rem' }"
+                        :style="{ color: table.colors.iconColor || '#007bff', fontSize: (currentGeneration.iconSize || table.colors.iconSize || 1) + 'rem' }"
                       >
                         <i
                           v-if="!cell.icon.startsWith('material-') && !cell.icon.startsWith('unicode|')"
@@ -598,7 +642,12 @@
           :key="pairIndex"
           class="print-container"
         >
-          <div v-for="table in pair" :key="table.id" class="print-table">
+          <div
+            v-for="table in pair"
+            :key="table.id"
+            class="print-table"
+            :style="{ width: (currentGeneration.printWidth || 140) + 'mm', height: (currentGeneration.printHeight || 140) + 'mm' }"
+          >
             <table class="bingo-table">
               <tbody>
                 <tr v-for="(row, rowIndex) in table.cells" :key="rowIndex">
@@ -609,13 +658,13 @@
                   >
                     <div
                       class="cell-content"
-                      :style="{ color: table.colors.textColor || '#333', fontSize: (table.colors.digitSize || 3.5) + 'rem' }"
+                      :style="{ color: table.colors.textColor || '#333', fontSize: (currentGeneration.digitSize || table.colors.digitSize || 3.5) + 'rem' }"
                     >
                       <span v-if="cell.number !== null">{{ cell.number }}</span>
                       <span
                         v-if="cell.icon"
                         class="cell-icon"
-                        :style="{ color: table.colors.iconColor || '#007bff', fontSize: (table.colors.iconSize || 1) + 'rem' }"
+                        :style="{ color: table.colors.iconColor || '#007bff', fontSize: (currentGeneration.iconSize || table.colors.iconSize || 1) + 'rem' }"
                       >
                         <i
                           v-if="!cell.icon.startsWith('material-') && !cell.icon.startsWith('unicode|')"
@@ -669,7 +718,6 @@
                 v-model="generateForm.color1"
                 placeholder="#ffffff"
               />
-              <span>Background Color 1</span>
             </div>
             <div class="color-input-group">
               <input type="color" v-model="generateForm.color2" />
@@ -678,7 +726,6 @@
                 v-model="generateForm.color2"
                 placeholder="#cccccc"
               />
-              <span>Background Color 2</span>
             </div>
           </div>
           <div class="form-group">
@@ -725,6 +772,47 @@
               placeholder="1"
             />
           </div>
+          <div class="form-group">
+            <label>Print Size (mm)</label>
+
+            <div style="display: flex; gap: 10px; align-items: center">
+              <input
+                v-model.number="generateForm.printWidth"
+                type="number"
+                min="50"
+                max="300"
+                step="1"
+                placeholder="140"
+                style="flex: 1"
+              />
+              <span>x</span>
+              <input
+                v-model.number="generateForm.printHeight"
+                type="number"
+                min="50"
+                max="300"
+                step="1"
+                placeholder="140"
+                style="flex: 1"
+              />
+              <button
+                type="button"
+                class="btn btn-secondary"
+                @click="generateForm.printWidth = 140; generateForm.printHeight = 140"
+                style="white-space: nowrap"
+              >
+                A5
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                @click="generateForm.printWidth = 200; generateForm.printHeight = 200"
+                style="white-space: nowrap"
+              >
+                A4
+              </button>
+            </div>
+          </div>
           <div class="modal-actions">
             <button class="btn btn-secondary" @click="closeGenerateModal">
               Cancel
@@ -753,7 +841,6 @@
                 v-model="editColorsForm.color1"
                 placeholder="#ffffff"
               />
-              <span>Background Color 1</span>
             </div>
             <div class="color-input-group">
               <input type="color" v-model="editColorsForm.color2" />
@@ -762,7 +849,6 @@
                 v-model="editColorsForm.color2"
                 placeholder="#cccccc"
               />
-              <span>Background Color 2</span>
             </div>
           </div>
           <div class="form-group">
@@ -786,28 +872,6 @@
                 placeholder="#007bff"
               />
             </div>
-          </div>
-          <div class="form-group">
-            <label>Digit Text Size (rem)</label>
-            <input
-              v-model.number="editColorsForm.digitSize"
-              type="number"
-              min="0.5"
-              max="10"
-              step="0.1"
-              placeholder="3.5"
-            />
-          </div>
-          <div class="form-group">
-            <label>Icon Size (rem)</label>
-            <input
-              v-model.number="editColorsForm.iconSize"
-              type="number"
-              min="0.5"
-              max="5"
-              step="0.1"
-              placeholder="1"
-            />
           </div>
           <div class="modal-actions">
             <button class="btn btn-secondary" @click="closeEditColorsModal">
@@ -881,8 +945,6 @@
             showGenerateModal: false,
             showEditColorsModal: false,
             showIconPicker: false,
-            editingTitle: false,
-            editTitleValue: '',
             generateForm: {
               title: '',
               numberOfTables: 1,
@@ -892,6 +954,8 @@
               iconColor: '#007bff',
               digitSize: 3.5,
               iconSize: 1,
+              printWidth: 140,
+              printHeight: 140,
             },
             editColorsForm: {
               tableId: null,
@@ -899,8 +963,6 @@
               color2: '',
               textColor: '',
               iconColor: '',
-              digitSize: 3.5,
-              iconSize: 1,
             },
             iconPicker: {
               tableId: null,
@@ -2595,6 +2657,8 @@
               iconColor: '#007bff',
               digitSize: 3.5,
               iconSize: 1,
+              printWidth: 140,
+              printHeight: 140,
             };
             this.showGenerateModal = true;
           },
@@ -2655,8 +2719,6 @@
               color2: this.generateForm.color2,
               textColor: this.generateForm.textColor,
               iconColor: this.generateForm.iconColor,
-              digitSize: this.generateForm.digitSize,
-              iconSize: this.generateForm.iconSize,
             };
 
             const tables = [];
@@ -2669,6 +2731,10 @@
               title: this.generateForm.title,
               createdAt: Date.now(),
               tables: tables,
+              printWidth: this.generateForm.printWidth || 140,
+              printHeight: this.generateForm.printHeight || 140,
+              digitSize: this.generateForm.digitSize || 3.5,
+              iconSize: this.generateForm.iconSize || 1,
             };
 
             this.generations.push(generation);
@@ -2689,20 +2755,6 @@
             this.currentView = 'list';
             this.currentGenerationId = null;
           },
-          startEditTitle() {
-            this.editTitleValue = this.currentGeneration.title;
-            this.editingTitle = true;
-          },
-          saveTitle() {
-            if (this.editTitleValue.trim()) {
-              this.currentGeneration.title = this.editTitleValue.trim();
-              this.saveData();
-            }
-            this.editingTitle = false;
-          },
-          cancelEditTitle() {
-            this.editingTitle = false;
-          },
           openEditColorsModal(table) {
             this.editColorsForm = {
               tableId: table.id,
@@ -2710,8 +2762,6 @@
               color2: table.colors.color2,
               textColor: table.colors.textColor || '#333333',
               iconColor: table.colors.iconColor || '#007bff',
-              digitSize: table.colors.digitSize || 3.5,
-              iconSize: table.colors.iconSize || 1,
             };
             this.showEditColorsModal = true;
           },
@@ -2727,8 +2777,6 @@
               table.colors.color2 = this.editColorsForm.color2;
               table.colors.textColor = this.editColorsForm.textColor;
               table.colors.iconColor = this.editColorsForm.iconColor;
-              table.colors.digitSize = this.editColorsForm.digitSize;
-              table.colors.iconSize = this.editColorsForm.iconSize;
               this.saveData();
             }
             this.closeEditColorsModal();
